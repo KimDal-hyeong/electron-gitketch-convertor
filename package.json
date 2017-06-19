@@ -4,7 +4,8 @@
   "description": "",
   "main": "main.js",
   "scripts": {
-    "start": "electron ."
+    "start": "electron .",
+    "pack:osx": "electron-packager . $npm_package_productName --out=dist/osx --platform=darwin --overwrite --arch=x64 --icon=images/icon.icns"
   },
   "author": "",
   "license": "MIT",
