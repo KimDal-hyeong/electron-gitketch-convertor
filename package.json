@@ -1,0 +1,19 @@
+{
+  "name": "sketch-to-folder",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "electron": "^1.6.10",
+    "gulp": "^3.9.1",
+    "gulp-clean": "^0.3.2",
+    "gulp-json-format": "^1.0.0",
+    "gulp-unzip": "^0.2.0",
+    "gulp-zip": "^4.0.0"
+  }
+}

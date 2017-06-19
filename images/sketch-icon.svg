@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="20" height="18" viewBox="0 0 20 18">
+  <defs>
+    <radialGradient id="sketch-icon-a" cy="28.295%" r="115.534%" fx="50%" fy="28.295%" gradientTransform="matrix(0 1 -.58097 0 .664 -.217)">
+      <stop offset="0%" stop-color="#FD7C00"/>
+      <stop offset="100%" stop-color="#F35300"/>
+    </radialGradient>
+    <radialGradient id="sketch-icon-b" cy="2.498%" r="82.826%" fx="50%" fy="2.498%" gradientTransform="matrix(0 .98955 -1 0 .525 -.47)">
+      <stop offset="0%" stop-color="#FDCE21"/>
+      <stop offset="100%" stop-color="#FDA500"/>
+    </radialGradient>
+    <linearGradient id="sketch-icon-c" x1="79.592%" x2="30.854%" y1="81.25%" y2="50%">
+      <stop offset="0%" stop-color="#FDD12B"/>
+      <stop offset="100%" stop-color="#FDC003"/>
+    </linearGradient>
+    <radialGradient id="sketch-icon-d" cy="0%" r="100%" fx="50%" fy="0%" gradientTransform="matrix(0 1 -.56115 0 .5 -.5)">
+      <stop offset="0%" stop-color="#FEF3CB"/>
+      <stop offset="100%" stop-color="#FEDD67"/>
+    </radialGradient>
+    <linearGradient id="sketch-icon-e" x1="100%" x2="0%" y1="50%" y2="50%">
+      <stop offset="0%" stop-color="#FC8900"/>
+      <stop offset="100%" stop-color="#FCAA00"/>
+    </linearGradient>
+  </defs>
+  <g fill="none" fill-rule="evenodd" transform="translate(.66 .472)">
+    <polygon fill="url(#sketch-icon-a)" points="9.47 0 18.94 11.004 0 11.004" transform="rotate(-180 9.47 8.569)"/>
+    <g transform="translate(3.834 6.134)">
+      <polygon fill="#FDCA0D" points="5.636 0 11.272 11.004 0 11.004" transform="rotate(-180 5.636 5.502)"/>
+      <polygon fill="url(#sketch-icon-b)" points="5.636 0 11.08 11.004 .192 11.004" transform="rotate(-180 5.636 5.502)"/>
+    </g>
+    <polygon fill="url(#sketch-icon-c)" points="5.368 5.559 5.636 0 0 6.134" transform="rotate(-180 4.735 3.067)"/>
+    <polygon fill="url(#sketch-icon-c)" points="5.368 5.559 5.636 0 0 6.134" transform="matrix(1 0 0 -1 9.47 6.134)"/>
+    <g transform="translate(3.834)">
+      <polygon fill="#FEFBED" points="5.636 6.134 11.272 0 0 0" transform="rotate(-180 5.636 3.067)"/>
+      <polygon fill="url(#sketch-icon-d)" points="5.636 5.981 10.965 0 .307 0" transform="rotate(-180 5.636 2.99)"/>
+    </g>
+    <g transform="translate(0 .575)">
+      <polygon fill="#FEE693" points="0 5.559 2.109 2.76 4.102 0 .077 0" transform="rotate(-180 2.051 2.78)"/>
+      <polygon fill="url(#sketch-icon-e)" points="0 5.559 4.102 0 .268 .153" transform="rotate(-180 2.051 2.78)"/>
+    </g>
+    <g transform="matrix(-1 0 0 1 18.94 .575)">
+      <polygon fill="#FEE693" points="0 5.559 2.109 2.76 4.102 0 .077 0" transform="rotate(-180 2.051 2.78)"/>
+      <polygon fill="url(#sketch-icon-e)" points="0 5.559 4.102 0 .268 .153" transform="rotate(-180 2.051 2.78)"/>
+    </g>
+  </g>
+</svg>

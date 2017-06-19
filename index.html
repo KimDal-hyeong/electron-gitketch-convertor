@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Sketch To Folder</title>
+  <style>
+    html, body {
+      height: 100%;
+      font-family: "Apple SD Gothic Neo";
+      color: #fff;
+      font-weight: 400;
+      line-height: 1;
+      letter-spacing: -0.03em;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    * {
+      padding: 0;
+      margin: 0;
+      box-sizing: border-box;
+    }
+
+    button {
+      line-height: inherit;
+      color: inherit;
+      font-size: 14px;
+      background: none;
+      outline: none;
+      font-weight: inherit;
+      border: 0;
+    }
+
+    a, button {
+      cursor: pointer;
+    }
+
+    p {
+      font-size: 14px;
+      line-height: 19px;
+      font-weight: inherit;
+      margin-bottom: 16px;
+    }
+
+    h4 {
+      font-size: 16px;
+      line-height: 22px;
+      font-weight: inherit;
+      margin-bottom: 16px;
+    }
+
+    /*컴포넌트*/
+    .round-box,
+    .round-btn {
+      line-height: 1;
+      padding: 8px 18px;
+      border: 1px solid #fff;
+      border-radius: 50px;
+      height: 34px;
+    }
+
+    .round-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .help-btn {
+      display: inline-block;
+      position: absolute;
+      right: 0;
+      bottom: 0;
+      padding-right: 16px;
+      padding-bottom: 10px;
+    }
+
+    /*공통 스타일*/
+    .home,
+    .overlay,
+    .watcher {
+      width: 100%;
+      height: 100%;
+      display: table;
+      text-align: center;
+      transition: 0.3s;
+    }
+
+    .home__container,
+    .overlay__container,
+    .watcher__container {
+      width: 100%;
+      height: 100%;
+      display: table-cell;
+      vertical-align: middle;
+    }
+
+    /*홈*/
+    .home {
+      background-image: linear-gradient(-180deg, #61CFF8 0%, #3777EA 100%);
+    }
+
+    .home__container {
+      filter: blur(0);
+    }
+
+    /*오버레이*/
+    .overlay--s2f,
+    .overlay--f2s,
+    .loading-overlay {
+      position: fixed;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      display: table;
+      opacity: 0;
+      text-align: center;
+      transition: 0.4s opacity;
+    }
+
+    .overlay__container {
+      background: rgba(0,0,0,0.50);
+    }
+
+    @keyframes watcher__loader-sketch {
+      0% {
+        transform: scaleX(0.05);
+      }
+
+      50% {
+        transform: scaleX(1);
+      }
+
+      100% {
+        transform: scaleX(0.05);
+      }
+    }
+
+
+  </style>
+</head>
+<body>
+
+
+<div class="home">
+  <div class="home__container">
+    <h4>
+      압축 해제된 스케치 폴더 혹은<br>
+      스케치 파일을 끌어넣어 주세요.
+    </h4>
+    <img src="images/line-image.svg">
+  </div>
+</div>
+
+<div class="loading-overlay" style="display: none">
+  <div class="overlay__container">
+    <img width="33" height="33" src="images/spinner.gif">
+    <p>작업중...</p>
+  </div>
+</div>
+
+<div class="overlay--s2f" style="display: none">
+  <div class="overlay__container">
+    <p>
+      스케치 파일의 압축을 풀고,<br>
+      JSON 파일을 포맷팅 했습니다.<br>
+      (*.unzipped-sketch)
+    </p>
+    <button onclick="closeOverlayS2F()" class="round-btn" type="button">확인</button>
+  </div>
+</div>
+
+<div class="overlay--f2s" style="display: none">
+  <div class="overlay__container">
+    <p>
+      스케치 폴더를 스케치 파일로 변환했습니다.
+    </p>
+    <button onclick="closeOverlayF2S()" class="round-btn" type="button">확인</button>
+  </div>
+</div>
+
+<!--<a class="help-btn" type="button">-->
+  <!--<img src="images/help-btn.svg">-->
+<!--</a>-->
+
+
+</body>
+<script>
+  var path = require('path');
+  var zipToSketch = require('./modules/zipToSketch').zipToSketch;
+  var unzipAndFormat = require('./modules/unzipAndFormat').unzipAndFormat;
+  // 돔 변수
+  var elmHome = document.getElementsByClassName('home')[0];
+  var elmHomeContainer = document.getElementsByClassName('home__container')[0];
+  var loadingOverlay = document.getElementsByClassName('loading-overlay')[0];
+  var elmOverlayS2F = document.getElementsByClassName('overlay--s2f')[0];
+  var elmOverlayF2S = document.getElementsByClassName('overlay--f2s')[0];
+  // 그외
+  var sketchFolderExtensionName = '.unzipped-sketch';
+
+  // 뷰 처리 메서드
+  function openOverlayS2F() {
+    elmOverlayS2F.style.display = 'table';
+    setTimeout(function () {
+      elmOverlayS2F.style.opacity = '1';
+    }, 1);
+    elmHomeContainer.style.filter = 'blur(4px)';
+    loadingStop();
+  }
+
+  function closeOverlayS2F() {
+    elmOverlayS2F.style.opacity = '0';
+    elmHomeContainer.style.filter = 'blur(0)';
+    setTimeout(function () {
+      elmOverlayS2F.style.display = 'none';
+    }, 300);
+  }
+
+  function openOverlayF2S() {
+    elmOverlayF2S.style.display = 'table';
+    setTimeout(function () {
+      elmOverlayF2S.style.opacity = '1';
+    }, 1);
+    elmHomeContainer.style.filter = 'blur(4px)';
+    loadingStop();
+  }
+
+  function closeOverlayF2S() {
+    elmOverlayF2S.style.opacity = '0';
+    elmHomeContainer.style.filter = 'blur(0)';
+    setTimeout(function () {
+      elmOverlayF2S.style.display = 'none';
+    }, 300);
+  }
+
+  function loadingStart() {
+    loadingOverlay.style.display = 'table';
+    setTimeout(function () {
+      loadingOverlay.style.opacity = '1';
+    }, 1);
+    elmHomeContainer.style.filter = 'blur(4px)';
+  }
+
+  function loadingStop() {
+    loadingOverlay.style.opacity = '0';
+    setTimeout(function () {
+      loadingOverlay.style.display = 'none';
+    }, 300);
+  }
+
+  // 이벤트
+  elmHome.addEventListener('dragover', function (e) {
+    e.preventDefault()
+  });
+  elmHome.addEventListener('drop', function (e) {
+    e.preventDefault();
+    var file = e.dataTransfer.files[0];
+    var fileExtname = path.extname(file.path);
+
+    // 스케치파일이면
+    if(fileExtname == '.sketch'){
+      loadingStart();
+      // 같은경로에 압축풀고 원래 스케치 삭제
+      unzipAndFormat(file.path, path.dirname(file.path)+ '/' + path.basename(file.path, '.sketch') + sketchFolderExtensionName, openOverlayS2F);
+
+      // 스케치 폴더면
+    } else if (fileExtname == sketchFolderExtensionName) {
+      loadingStart();
+      // 같은경로에 스케치파일 만들고 원래 폴더 삭제
+      var sketchFileName = file.name.split(sketchFolderExtensionName).join('') + '.sketch';
+      zipToSketch(file.path, path.dirname(file.path) + '/' + sketchFileName, openOverlayF2S);
+    }
+
+  });
+
+
+</script>
+</html>
