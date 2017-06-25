@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Sketch To Folder</title>
+  <title>Gitketch Convertor</title>
   <style>
     html, body {
       height: 100%;
@@ -142,7 +142,7 @@
 <div class="home">
   <div class="home__container">
     <h4>
-      압축 해제된 스케치 폴더 혹은<br>
+      .gitketch 폴더 혹은<br>
       스케치 파일을 끌어넣어 주세요.
     </h4>
     <img src="images/line-image.svg">
@@ -159,9 +159,7 @@
 <div class="overlay--s2f" style="display: none">
   <div class="overlay__container">
     <p>
-      스케치 파일의 압축을 풀고,<br>
-      JSON 파일을 포맷팅 했습니다.<br>
-      (*.unzipped-sketch)
+      스케치 파일을 .gitketch 폴더로 변경했습니다.<br>
     </p>
     <button onclick="closeOverlayS2F()" class="round-btn" type="button">확인</button>
   </div>
@@ -170,7 +168,7 @@
 <div class="overlay--f2s" style="display: none">
   <div class="overlay__container">
     <p>
-      스케치 폴더를 스케치 파일로 변환했습니다.
+      .gitketch 폴더를 스케치 파일로 변환했습니다.
     </p>
     <button onclick="closeOverlayF2S()" class="round-btn" type="button">확인</button>
   </div>
@@ -186,6 +184,8 @@
   var path = require('path');
   var zipToSketch = require('./modules/zipToSketch').zipToSketch;
   var unzipAndFormat = require('./modules/unzipAndFormat').unzipAndFormat;
+  var reformatForGit = require('./modules/reformatForGit').reformatForGit;
+  var mergeReformattedSketch = require('./modules/mergeReformattedSketch').mergeReformattedSketch;
   // 돔 변수
   var elmHome = document.getElementsByClassName('home')[0];
   var elmHomeContainer = document.getElementsByClassName('home__container')[0];
@@ -193,7 +193,7 @@
   var elmOverlayS2F = document.getElementsByClassName('overlay--s2f')[0];
   var elmOverlayF2S = document.getElementsByClassName('overlay--f2s')[0];
   // 그외
-  var sketchFolderExtensionName = '.unzipped-sketch';
+  var sketchFolderExtensionName = '.gitketch';
 
   // 뷰 처리 메서드
   function openOverlayS2F() {
@@ -247,7 +247,7 @@
 
   // 이벤트
   elmHome.addEventListener('dragover', function (e) {
-    e.preventDefault()
+    e.preventDefault();
   });
   elmHome.addEventListener('drop', function (e) {
     e.preventDefault();
@@ -257,17 +257,23 @@
     // 스케치파일이면
     if(fileExtname == '.sketch'){
       loadingStart();
+      var sketchFolderPath = path.dirname(file.path)+ '/' + path.basename(file.path, '.sketch') + sketchFolderExtensionName;
       // 같은경로에 압축풀고 원래 스케치 삭제
-      unzipAndFormat(file.path, path.dirname(file.path)+ '/' + path.basename(file.path, '.sketch') + sketchFolderExtensionName, openOverlayS2F);
+      // 삭제후 리포맷팅 진행
+      unzipAndFormat(file.path, sketchFolderPath, function () {
+        reformatForGit(sketchFolderPath, openOverlayS2F);
+      });
 
       // 스케치 폴더면
     } else if (fileExtname == sketchFolderExtensionName) {
       loadingStart();
-      // 같은경로에 스케치파일 만들고 원래 폴더 삭제
-      var sketchFileName = file.name.split(sketchFolderExtensionName).join('') + '.sketch';
-      zipToSketch(file.path, path.dirname(file.path) + '/' + sketchFileName, openOverlayF2S);
+      // 리포맷팅 되어있는 json을 다시 다 합치는 작업진행
+      mergeReformattedSketch(file.path, function () {
+        // 같은경로에 스케치파일 만들고 원래 폴더 삭제
+        var sketchFileName = file.name.split(sketchFolderExtensionName).join('') + '.sketch';
+        zipToSketch(file.path, path.dirname(file.path) + '/' + sketchFileName, openOverlayF2S);
+      });
     }
-
   });
 
 
