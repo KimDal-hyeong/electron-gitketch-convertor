@@ -1,0 +1,167 @@
+var path = require('path');
+var fs = require('fs');
+var gulp = require('gulp');
+var jeditor = require("gulp-json-editor");
+var clean = require('gulp-clean');
+var async = require('async');
+
+
+function reformatForGit(dirpath, callback) {
+
+  async.parallel([
+    function (parallelCallback) {
+      // 빈폴더 생성
+      fs.mkdirSync(dirpath + '/document');
+      // document.json 리포맷팅
+      gulp.src(dirpath + '/document.json')
+        .pipe(jeditor(function(json) {
+
+          var documentJsonArrays = {
+            'assets.colors': json.assets.colors,
+            'assets.gradients': json.assets.gradients,
+            'assets.images': json.assets.images,
+            'layerStyles.objects': json.layerStyles.objects,
+            'layerTextStyles.objects': json.layerTextStyles.objects,
+            'pages': json.pages,
+          };
+
+          for(var arrayName in documentJsonArrays){
+            var value = documentJsonArrays[arrayName];
+            // 배열에 값이 있으면 폴더 생성
+            if(value.length > 0){
+              fs.mkdirSync(dirpath + '/document/' + arrayName);
+            }
+            // 각각의 내용별로 json파일 만들기
+            for(var i = 0; i < value.length; i++ ) {
+              var content = JSON.stringify(value[i], null, 2);
+              var jsonFileName;
+
+              // object id가 있으면 해당 id를 파일이름으로,
+              // _ref_class가 있으면 _ref_class + _index,
+              // 그것도 없으면 class + _index로 네이밍
+              if(value[i]['do_objectID']){
+                jsonFileName = value[i]['do_objectID'];
+              }else if(value[i]['_ref_class']){
+                jsonFileName = value[i]['_ref_class'] + '_' + i;
+              }else {
+                jsonFileName = value[i]['_class'] + '_' + i;
+              }
+              // 파일 쓰기
+              fs.writeFile(dirpath + '/document/' + arrayName + '/' + jsonFileName + '.json', content, function (err) {
+                if (err) return console.log(err);
+              });
+            }
+          }
+
+          // 해당 배열들 모두 비우기
+          json.assets.colors = [];
+          json.assets.gradients = [];
+          json.assets.images = [];
+          json.layerStyles.objects = [];
+          json.layerTextStyles.objects = [];
+          json.pages = [];
+
+          return json;
+        }))
+        // document폴더에 배열을 비운 document.json파일 생성
+        .pipe(gulp.dest(dirpath + '/' + 'document'))
+
+        // 기존의 document.json파일은 삭제
+        .on('end', function () {
+          gulp.src(dirpath + '/' + 'document.json', {read: false})
+            .pipe(clean({force: true}))
+            .on('error',function(e){})
+            .on('data',function(e){})
+            .on('end', function () {
+              parallelCallback(null);
+            });
+        });
+
+    },
+    function (parallelCallback) {
+      // pages/*.json 리포맷팅
+      var pageJsonFileNameList = fs.readdirSync(dirpath + '/pages');
+
+      // page json파일 마다 작업 시작
+      async.each(pageJsonFileNameList, function (pageJsonName, callback1) {
+        if(pageJsonName != '.DS_Store'){
+
+          fs.mkdirSync(dirpath + '/pages/' + pageJsonName.split('.json')[0]);
+          fs.mkdirSync(dirpath + '/pages/' + pageJsonName.split('.json')[0] + '/layers');
+
+          var pageJsonString = fs.readFileSync(dirpath + '/pages/' + pageJsonName, 'utf8');
+
+          async.parallel([
+            // 페이지 json의 layers를 비우고 해당 페이지의 id로된 폴더에 새로 저장
+            function (parallelCallback2) {
+
+              var layerEmptyPageString = pageJsonString.split('\n  "layers": [\n')[0] + '\n  "layers": ["LAYERS-JSON"],\n' + pageJsonString.split('\n  ],\n')[pageJsonString.split('\n  ],\n').length - 1];
+              var pageJsonPath = dirpath + '/pages/' + pageJsonName.split('.json')[0] + '/' + pageJsonName;
+              fs.writeFile(pageJsonPath, layerEmptyPageString, function (err) {
+                if (err) return console.log(err);
+                parallelCallback2();
+              });
+
+            },
+            // 페이지 json의 layers를 하나하나 json파일로 만들어 layers폴더에 저장
+            function (parallelCallback2) {
+              // 괄호를 기준으로 자르기
+              var layerJsonStringArray = pageJsonString.split('\n    {\n');
+              // 배열 첫번째 제거
+              layerJsonStringArray.splice(0, 1);
+              // 배열 마지막의 뒷부분 제거
+              layerJsonStringArray[layerJsonStringArray.length - 1] = layerJsonStringArray[layerJsonStringArray.length - 1].split('\n  ],\n')[0];
+              // 쉼표 제거, 앞쪽 공백 제거
+              for(var i = 0; i < layerJsonStringArray.length; i++){
+                layerJsonStringArray[i] = layerJsonStringArray[i].split('\n    },').join('\n    }').split('\n    ').join('\n').replace('      ', '{\n  ');
+              }
+              // 파일 쓰기
+              async.each(layerJsonStringArray, function (layerJsonString, callback2) {
+                var layerJson = JSON.parse(layerJsonString);
+                var layerJsonPath = dirpath + '/pages/' + pageJsonName.split('.json')[0] + '/layers/' + layerJson['do_objectID'] + '.json';
+                fs.writeFile(layerJsonPath, layerJsonString, function (err) {
+                  if (err) return console.log(err);
+                  callback2();
+                });
+              },function () {
+                parallelCallback2();
+              })
+
+            }
+          ],function (err,result) {
+            callback1();
+          });
+        } else {
+          callback1();
+        }
+      },function () {
+        // pages 폴더안의 기존 json파일 삭제
+        gulp.src(dirpath + '/pages/*.json', {read: false})
+          .pipe(clean({force: true}))
+          .on('error',function(e){})
+          .on('data',function(e){})
+          .on('end',function () {
+            parallelCallback(null);
+          });
+      });
+    }
+  ],function (err,result) {
+    // gitketch 버전정보를 담은 gitketch.json 파일 추가
+    var packageVersion = require('../package.json').version;
+    var gitketchJsonContent = {
+      "version": packageVersion
+    };
+
+    fs.writeFile(dirpath + '/' + 'gitketch.json', JSON.stringify(gitketchJsonContent, null, 2), function (err) {
+      if (err) return console.log(err);
+      callback();
+    });
+
+  });
+
+
+}
+
+
+
+exports.reformatForGit = reformatForGit;

@@ -1,5 +1,5 @@
 {
-  "name": "electron-gitketch",
+  "name": "electron-gitketch-convertor",
   "version": "0.1.0",
   "description": "",
   "main": "main.js",
@@ -7,12 +7,14 @@
     "start": "electron .",
     "pack:osx": "electron-packager . $npm_package_productName --out=dist/osx --platform=darwin --overwrite --arch=x64 --icon=images/icon.icns"
   },
-  "author": "",
+  "author": "KimDal-hyeong",
   "license": "MIT",
   "dependencies": {
+    "async": "^2.4.1",
     "electron": "^1.6.10",
     "gulp": "^3.9.1",
     "gulp-clean": "^0.3.2",
+    "gulp-json-editor": "^2.2.1",
     "gulp-json-format": "^1.0.0",
     "gulp-unzip": "^0.2.0",
     "gulp-zip": "^4.0.0"

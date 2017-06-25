@@ -1,0 +1,153 @@
+var path = require('path');
+var fs = require('fs');
+var gulp = require('gulp');
+var jeditor = require("gulp-json-editor");
+var clean = require('gulp-clean');
+var async = require('async');
+
+
+function mergeReformattedSketch(dirpath, callback) {
+
+  async.parallel([
+    function (parallelCallback) {
+
+      // document.json 파일 머지
+      var documentJsonArraysDirNames = [
+        'assets.colors',
+        'assets.gradients',
+        'assets.images',
+        'layerStyles.objects',
+        'layerTextStyles.objects',
+        'pages'
+      ];
+      var fileNames = [];
+
+      var colors = [];
+      var gradients = [];
+      var images = [];
+      var layerTextStyles = [];
+      var layerStyles = [];
+      var pages = [];
+
+      // 파일 경로 리스트 만들기
+      async.each(documentJsonArraysDirNames, function (data, callback1) {
+        var documentFolderFileList = fs.readdirSync(dirpath + '/document');
+        if(documentFolderFileList .indexOf(data) != -1) {
+          var dirFileNames = fs.readdirSync(dirpath + '/document/' + data);
+          for(var i = 0 ; i < dirFileNames.length; i++){
+            fileNames.push(dirpath + '/document/' + data + '/' + dirFileNames[i]);
+          }
+        }
+        callback1();
+      }, function () {
+
+        // 파일들 불러와서 해당되는 임시 배열에 넣기
+        async.each(fileNames, function (data, callback2) {
+          var dirPath = path.dirname(data);
+          var dirName = dirPath.split('/')[dirPath.split('/').length - 1];
+
+          fs.readFile(data, 'utf8',function (err, file) {
+            var object = JSON.parse(file);
+            if(dirName == 'assets.colors'){
+              colors.push(object);
+            }
+            else if(dirName == 'assets.gradients'){
+              gradients.push(object);
+            }
+            else if(dirName == 'assets.images'){
+              images.push(object);
+            }
+            else if(dirName == 'layerStyles.objects'){
+              layerStyles.push(object);
+            }
+            else if(dirName == 'layerTextStyles.objects'){
+              layerTextStyles.push(object);
+            }
+            else if(dirName == 'pages'){
+              pages.push(object);
+            }
+            callback2();
+          })
+
+        }, function () {
+
+          gulp.src(dirpath + '/document/document.json')
+            .pipe(jeditor(function(json) {
+
+              json.assets.colors = colors;
+              json.assets.gradients = gradients;
+              json.assets.images = images;
+              json.layerStyles.objects = layerStyles;
+              json.layerTextStyles.objects = layerTextStyles;
+              json.pages = pages;
+
+              return json;
+            }))
+            .pipe(gulp.dest(dirpath))
+            // 기존의 document 폴더 삭제
+            .on('end', function () {
+              gulp.src(dirpath + '/' + 'document', {read: false})
+                .pipe(clean({force: true}))
+                .on('error',function(e){})
+                .on('data',function(e){})
+                .on('end',function () {
+                  parallelCallback(null);
+                });
+            });
+        });
+      });
+
+    },
+    function (parallelCallback) {
+
+      // pages/*.json파일 레이어 머지
+      var pageIdList = fs.readdirSync(dirpath + '/pages');
+      async.each(pageIdList, function (pageId, callback1) {
+        if(pageId != '.DS_Store'){
+          var layersFullString = '';
+          var layerJsonFileNameList = fs.readdirSync(dirpath + '/pages/' + pageId + '/layers');
+          // 레이어 json 합쳐서 하나의 문자열로 만들기
+          for(var i = 0; i< layerJsonFileNameList.length; i++) {
+            var layerJsonFileName = layerJsonFileNameList[i];
+            if(layerJsonFileName != '.DS_Store'){
+              var layerJsonString = fs.readFileSync(dirpath + '/pages/' + pageId + '/layers/' + layerJsonFileName, 'utf8');
+              if(i < layerJsonFileNameList.length - 1){
+                layersFullString = layersFullString + layerJsonString + ',\n';
+              }else {
+                layersFullString = layersFullString + layerJsonString + '\n';
+              }
+            }
+          }
+          // page json에 넣어서 파일 쓰기
+          var pageJsonString = fs.readFileSync(dirpath + '/pages/' + pageId + '/' + pageId + '.json', 'utf8');
+          pageJsonString = pageJsonString.replace('"LAYERS-JSON"', layersFullString);
+          fs.writeFile(dirpath + '/pages/' + pageId + '.json', pageJsonString, function (err) {
+            if (err) return console.log(err);
+            // 기존 폴더 삭제
+            gulp.src(dirpath + '/pages/' + pageId, {read: false})
+              .pipe(clean({force: true}))
+              .on('error',function(e){})
+              .on('data',function(e){})
+              .on('end',function () {
+                callback1();
+              });
+          });
+
+        } else {
+          callback1();
+        }
+      },function () {
+        parallelCallback(null);
+      });
+
+    }
+  ],function (err,result) {
+    callback();
+  });
+
+
+}
+
+
+
+exports.mergeReformattedSketch = mergeReformattedSketch;
