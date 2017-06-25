@@ -5,7 +5,7 @@
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "pack:osx": "electron-packager . $npm_package_productName --out=dist/osx --platform=darwin --overwrite --arch=x64 --icon=images/icon.icns"
+    "pack:osx": "electron-packager . GitketchConvertor --out=dist/osx --platform=darwin --overwrite --arch=x64 --icon=images/icon.icns"
   },
   "author": "KimDal-hyeong",
   "license": "MIT",
