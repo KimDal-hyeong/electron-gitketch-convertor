@@ -1,6 +1,6 @@
 {
-  "name": "sketch-to-folder",
-  "version": "1.0.0",
+  "name": "electron-gitketch",
+  "version": "0.1.0",
   "description": "",
   "main": "main.js",
   "scripts": {
